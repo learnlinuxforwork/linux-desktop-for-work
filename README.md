@@ -11,6 +11,8 @@ what it installs and how to run it.
 Linux** host — they're plain bash and assume a Unix-style shell and file paths.
 Windows isn't covered here.
 
+![Setup flow: host downloads and installs a VM unattended, then a guest script installs tools, hardens the firewall, and repositions the dock, for both Ubuntu and Rocky Linux](docs/setup-flow.svg)
+
 ## Sections
 
 - [`canonical-ubuntu/`](canonical-ubuntu/README.md) — Ubuntu Desktop LTS in VirtualBox,
