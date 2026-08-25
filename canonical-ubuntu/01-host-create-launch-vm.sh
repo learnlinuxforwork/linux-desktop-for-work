@@ -24,6 +24,12 @@
 # on disk: if INSTALL_PASSWORD isn't set in the environment, you'll be
 # prompted for it, and it's passed to VBoxManage via a 0600 temp file that
 # gets deleted when the script exits.
+#
+# The VM is built with EFI firmware and Secure Boot enabled (Microsoft +
+# Oracle keys enrolled) — Ubuntu's shim bootloader is signed for exactly
+# this, so it boots straight through. See "Secure Boot" in this section's
+# README for what that means for kernel modules (Guest Additions included)
+# and for host-side Secure Boot considerations on Linux/macOS.
 
 set -euo pipefail
 
@@ -61,6 +67,47 @@ die() { printf '\n\033[1;31mERROR:\033[0m %s\n' "$1" >&2; exit 1; }
 # ---------------------------------------------------------------------------
 command -v VBoxManage >/dev/null 2>&1 || die \
   "VBoxManage not found. Install VirtualBox first (https://www.virtualbox.org/wiki/Downloads)."
+
+# Host-side Secure Boot / kernel-extension checks. This is about the HOST's
+# own security settings blocking VirtualBox itself from running — separate
+# from the guest Secure Boot this script enables on the VM (below).
+case "$(uname -s)" in
+  Linux)
+    if command -v mokutil >/dev/null 2>&1 && mokutil --sb-state 2>/dev/null | grep -qi "enabled"; then
+      if ! lsmod 2>/dev/null | grep -q '^vboxdrv'; then
+        cat >&2 <<'EOF'
+
+WARNING: Secure Boot is enabled on this host and the vboxdrv kernel module
+isn't loaded. VirtualBox's kernel modules must be signed and enrolled via
+MOK (Machine Owner Key) to load under host Secure Boot, or VMs will fail
+to start.
+
+Fix: reinstall/reconfigure the VirtualBox kernel modules so they prompt
+for MOK enrollment (e.g. `sudo dpkg-reconfigure virtualbox-dkms` on
+Debian/Ubuntu hosts), set an enrollment password when asked, reboot, and
+at the blue "MOK Management" screen choose "Enroll MOK" -> "Continue" ->
+enter the password -> reboot again. See "Secure Boot" in this section's
+README for details.
+
+EOF
+      fi
+    fi
+    ;;
+  Darwin)
+    if [[ "$(uname -m)" == "arm64" ]]; then
+      cat >&2 <<'EOF'
+
+WARNING: You're on an Apple Silicon (M-series) Mac. VirtualBox's support
+for x86_64 guests there is a limited technology preview, not a supported
+configuration — this script downloads an x86_64 Ubuntu ISO, which may run
+very slowly or not at all. See "Secure Boot" in this section's README for
+details and alternatives (an Intel Mac, or a native ARM hypervisor like
+UTM/Parallels/VMware Fusion).
+
+EOF
+    fi
+    ;;
+esac
 
 mkdir -p "$ISO_DIR"
 
@@ -119,6 +166,7 @@ else
     --vram "$VM_VRAM_MB" \
     --graphicscontroller vmsvga \
     --ioapic on \
+    --firmware efi64 \
     --boot1 disk --boot2 dvd --boot3 none --boot4 none \
     --nic1 nat \
     --audio-driver none \
@@ -132,7 +180,16 @@ else
   VBoxManage storagectl "$VM_NAME" --name "SATA Controller" --add sata --controller IntelAhci --portcount 2
   VBoxManage storageattach "$VM_NAME" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium "$DISK_PATH"
 
-  log "VM '$VM_NAME' created (${VM_MEMORY_MB}MB RAM, ${VM_CPUS} CPUs, ${VM_DISK_MB}MB disk)."
+  # Secure Boot: initialize the VM's UEFI variable store and enroll the
+  # standard Microsoft + Oracle keys. Ubuntu's shim/grub are signed by
+  # Microsoft's UEFI CA, so this is what makes them boot under Secure Boot
+  # (rather than being rejected as untrusted).
+  log "Enabling Secure Boot"
+  VBoxManage modifynvram "$VM_NAME" inituefivarstore
+  VBoxManage modifynvram "$VM_NAME" enrollmssignatures
+  VBoxManage modifynvram "$VM_NAME" enrollorclpk
+
+  log "VM '$VM_NAME' created (${VM_MEMORY_MB}MB RAM, ${VM_CPUS} CPUs, ${VM_DISK_MB}MB disk, EFI + Secure Boot)."
 fi
 
 # ---------------------------------------------------------------------------
@@ -162,6 +219,11 @@ as '$INSTALL_USER' with the password you set.
 
 If the VM powers off instead of rebooting, start it again with:
   VBoxManage startvm "$VM_NAME"
+
+This VM boots with Secure Boot on. If VirtualBox Guest Additions features
+(shared clipboard, drag-and-drop, auto-resize) don't work after first
+login, its kernel modules likely need a one-time MOK enrollment — see
+"Secure Boot" in this section's README for the exact steps.
 
 Next steps:
   1. Log in as '$INSTALL_USER'.

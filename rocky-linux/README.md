@@ -102,6 +102,85 @@ Both scripts are safe to run more than once — already-installed tools are just
 - VLC (via RPM Fusion — not in Rocky's own repos due to licensing)
 - Google Chrome (official rpm)
 
+## Secure Boot
+
+`01-host-create-launch-vm.sh` builds the VM with **EFI firmware and Secure Boot
+enabled** — it initializes the VM's UEFI variable store and enrolls the standard
+Microsoft and Oracle keys:
+
+```bash
+VBoxManage modifyvm "$VM_NAME" --firmware efi64
+VBoxManage modifynvram "$VM_NAME" inituefivarstore
+VBoxManage modifynvram "$VM_NAME" enrollmssignatures
+VBoxManage modifynvram "$VM_NAME" enrollorclpk
+```
+
+Rocky's bootloader (`shim` + `grub2`) is signed by Microsoft's UEFI CA, same as
+Ubuntu's, so it boots straight through this with no extra steps — you don't need to
+do anything for the OS itself to start.
+
+**What this means for kernel modules.** Anything built on the guest at install time
+rather than shipped pre-signed — most importantly **VirtualBox Guest Additions**
+(`vboxguest`, `vboxsf`, `vboxvideo`) — is *not* signed, and Secure Boot will refuse to
+load it. If shared clipboard, drag-and-drop, or display auto-resize aren't working
+after you log in for the first time, this is why. Rocky doesn't have a one-line
+`dpkg-reconfigure`-style fix for this the way Debian/Ubuntu does, so it's a manual
+signing procedure:
+
+```bash
+# 1. Generate a signing key (once)
+sudo mkdir -p /root/module-signing && cd /root/module-signing
+sudo openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER \
+  -out MOK.der -nodes -days 36500 -subj "/CN=VirtualBox Guest Additions signing key/"
+
+# 2. Enroll it — sets a one-time password, then reboot
+sudo mokutil --import MOK.der
+sudo reboot
+```
+
+At the blue **"MOK Management"** screen, choose **Enroll MOK** → **Continue** →
+enter the password you set → **Reboot**. Then sign and load the modules:
+
+```bash
+sudo dnf install -y kernel-devel-$(uname -r)
+for mod in vboxguest vboxsf vboxvideo; do
+  sudo /usr/src/kernels/$(uname -r)/scripts/sign-file sha256 \
+    /root/module-signing/MOK.priv /root/module-signing/MOK.der \
+    "/lib/modules/$(uname -r)/misc/${mod}.ko" 2>/dev/null
+  sudo modprobe "$mod"
+done
+mokutil --sb-state   # should show Secure Boot enabled, no pending enrollment
+lsmod | grep vbox    # should list the modules as loaded
+```
+
+**If you'd rather not deal with this**, turn Secure Boot off for the VM — either
+uncheck it in the VirtualBox GUI (Settings → System → Motherboard → Enable Secure
+Boot) or skip the three `modifynvram` lines above before creating the VM. EFI firmware
+without Secure Boot still boots Rocky fine and never triggers the MOK dance.
+
+**Host-side Secure Boot** is a separate, unrelated thing — that's about your own
+machine's security blocking VirtualBox itself from running, not the VM:
+
+- **Linux host:** if Secure Boot is enabled on your machine, VirtualBox's own kernel
+  modules (`vboxdrv` and friends) need to be signed and enrolled the same way — the
+  script's preflight check warns you if this looks unresolved. On a Fedora/RHEL-family
+  host, try `sudo /sbin/vboxconfig` to trigger a rebuild (it will prompt for MOK
+  enrollment if needed), or fall back to the same manual `openssl`/`mokutil`/
+  `sign-file` procedure above, applied to `vboxdrv.ko` instead. Simplest of all:
+  disable Secure Boot in your machine's UEFI settings if your organization's policy
+  allows it.
+- **macOS host:** Secure Boot in the UEFI/MOK sense doesn't apply, but there are two
+  analogous gotchas the script's preflight check watches for:
+  - On an **Intel Mac**, VirtualBox needs its kernel extension approved once in
+    **System Settings → Privacy & Security** (look for "System software from
+    developer 'Oracle America, Inc.' was blocked" and click Allow), and on T2-chip
+    Macs you may additionally need to boot into Recovery → Startup Security Utility
+    and allow reduced kext security.
+  - On **Apple Silicon (M-series) Macs**, VirtualBox's x86_64 guest support is a
+    limited technology preview, not a supported setup — these scripts download an
+    x86_64 ISO, which may run very slowly or not boot at all. Use an Intel Mac, or a
+    native ARM hypervisor (UTM, Parallels, VMware Fusion) instead.
+
 ## Hardening & UI
 
 - **Firewall (firewalld):** default zone `public`, the default unlimited SSH allow is

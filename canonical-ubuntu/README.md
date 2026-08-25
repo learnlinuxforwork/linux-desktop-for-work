@@ -79,6 +79,65 @@ Both scripts are safe to run more than once — already-installed tools are just
 - VLC
 - Google Chrome
 
+## Secure Boot
+
+`01-host-create-launch-vm.sh` builds the VM with **EFI firmware and Secure Boot
+enabled** — it initializes the VM's UEFI variable store and enrolls the standard
+Microsoft and Oracle keys:
+
+```bash
+VBoxManage modifyvm "$VM_NAME" --firmware efi64
+VBoxManage modifynvram "$VM_NAME" inituefivarstore
+VBoxManage modifynvram "$VM_NAME" enrollmssignatures
+VBoxManage modifynvram "$VM_NAME" enrollorclpk
+```
+
+Ubuntu's bootloader (`shim` + `grub`) is signed by Microsoft's UEFI CA, so it boots
+straight through this with no extra steps — you don't need to do anything for the OS
+itself to start.
+
+**What this means for kernel modules.** Anything built on the guest at install time
+rather than shipped pre-signed — most importantly **VirtualBox Guest Additions**
+(`vboxguest`, `vboxsf`, `vboxvideo`, installed via DKMS) — is *not* signed, and Secure
+Boot will refuse to load it. If shared clipboard, drag-and-drop, or display
+auto-resize aren't working after you log in for the first time, this is why. Fix it
+with a one-time MOK (Machine Owner Key) enrollment:
+
+1. Inside the VM, trigger a rebuild so it generates a MOK and prompts for an
+   enrollment password: `sudo dpkg-reconfigure virtualbox-guest-dkms` (or just
+   `sudo update-secureboot-policy --enroll-key` if that's not present).
+2. Set a password when prompted, then reboot.
+3. At the blue **"MOK Management"** screen, choose **Enroll MOK** → **Continue** →
+   enter the password you set → **Reboot**.
+4. Verify: `mokutil --sb-state` should show Secure Boot enabled with no pending
+   enrollment, and `lsmod | grep vbox` should list the modules as loaded.
+
+**If you'd rather not deal with this**, turn Secure Boot off for the VM — either
+uncheck it in the VirtualBox GUI (Settings → System → Motherboard → Enable Secure
+Boot) or skip the three `modifynvram` lines above before creating the VM. EFI firmware
+without Secure Boot still boots Ubuntu fine and never triggers the MOK dance.
+
+**Host-side Secure Boot** is a separate, unrelated thing — that's about your own
+machine's security blocking VirtualBox itself from running, not the VM:
+
+- **Linux host:** if Secure Boot is enabled on your machine, VirtualBox's own kernel
+  modules (`vboxdrv` and friends) need to be signed and enrolled the same way — the
+  script's preflight check warns you if this looks unresolved. Trigger MOK enrollment
+  with `sudo dpkg-reconfigure virtualbox-dkms` (Debian/Ubuntu) and follow the same
+  "Enroll MOK" steps above, or simplest of all, disable Secure Boot in your machine's
+  UEFI settings if your organization's policy allows it.
+- **macOS host:** Secure Boot in the UEFI/MOK sense doesn't apply, but there are two
+  analogous gotchas the script's preflight check watches for:
+  - On an **Intel Mac**, VirtualBox needs its kernel extension approved once in
+    **System Settings → Privacy & Security** (look for "System software from
+    developer 'Oracle America, Inc.' was blocked" and click Allow), and on T2-chip
+    Macs you may additionally need to boot into Recovery → Startup Security Utility
+    and allow reduced kext security.
+  - On **Apple Silicon (M-series) Macs**, VirtualBox's x86_64 guest support is a
+    limited technology preview, not a supported setup — these scripts download an
+    x86_64 ISO, which may run very slowly or not boot at all. Use an Intel Mac, or a
+    native ARM hypervisor (UTM, Parallels, VMware Fusion) instead.
+
 ## Hardening & UI
 
 - **Firewall (ufw):** default deny incoming, default allow outgoing, rate-limited SSH,

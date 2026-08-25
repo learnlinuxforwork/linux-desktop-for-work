@@ -99,3 +99,7 @@ Full details, what gets installed, and troubleshooting: [`rocky-linux/README.md`
   relevant host script instead of leaving an old one pinned.
 - VM installs are fully unattended via `VBoxManage unattended install` — no clicking
   through an installer. See each section's README for the exact steps.
+- Every VM is built with EFI + Secure Boot enabled, and both host scripts check for
+  Secure Boot / kernel-extension issues on the host itself (Linux and macOS). See
+  "Secure Boot" in each section's README for what's enabled, what it means for Guest
+  Additions, and how to disable it if you don't want it.
