@@ -7,6 +7,10 @@ bare metal).
 Each distro/environment gets its own top-level directory with its own README covering
 what it installs and how to run it.
 
+**Host requirements:** these instructions and scripts are written for a **macOS or
+Linux** host — they're plain bash and assume a Unix-style shell and file paths.
+Windows isn't covered here.
+
 ## Sections
 
 - [`canonical-ubuntu/`](canonical-ubuntu/README.md) — Ubuntu Desktop LTS in VirtualBox,
@@ -17,8 +21,9 @@ what it installs and how to run it.
 
 ## Quick start: Ubuntu
 
-1. **Install VirtualBox** on your host machine if you don't already have it:
-   https://www.virtualbox.org/wiki/Downloads
+1. **Install VirtualBox** on your macOS or Linux host machine if you don't already
+   have it: https://www.virtualbox.org/wiki/Downloads (grab the macOS or Linux build
+   for your machine — not Windows).
 2. **Get this repo** onto your host machine:
    ```bash
    git clone https://github.com/learnlinuxforwork/linux-desktop-for-work.git
@@ -48,8 +53,9 @@ Full details, what gets installed, and troubleshooting: [`canonical-ubuntu/READM
 
 ## Quick start: Rocky Linux
 
-1. **Install VirtualBox** on your host machine if you don't already have it:
-   https://www.virtualbox.org/wiki/Downloads
+1. **Install VirtualBox** on your macOS or Linux host machine if you don't already
+   have it: https://www.virtualbox.org/wiki/Downloads (grab the macOS or Linux build
+   for your machine — not Windows).
 2. **Get this repo** onto your host machine:
    ```bash
    git clone https://github.com/learnlinuxforwork/linux-desktop-for-work.git

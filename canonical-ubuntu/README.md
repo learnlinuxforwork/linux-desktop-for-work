@@ -12,6 +12,9 @@ the guest OS:
 | [`01-host-create-launch-vm.sh`](01-host-create-launch-vm.sh) | Host (has VirtualBox) | Downloads Ubuntu Desktop, verifies its checksum, creates the VM, boots it |
 | [`02-guest-provision-ubuntu.sh`](02-guest-provision-ubuntu.sh) | Guest (inside the VM) | Installs everything below and applies hardening/UI tweaks |
 
+Run `01-host-create-launch-vm.sh` on a **macOS or Linux** host — it's plain bash. This
+repo doesn't cover Windows hosts.
+
 This always targets the current Ubuntu LTS — right now that's **26.04 (Resolute
 Raccoon)**. Don't point it at an interim release; when the next LTS ships, bump
 `UBUNTU_VERSION` at the top of `01-host-create-launch-vm.sh`.

@@ -16,6 +16,9 @@ the guest OS:
 | [`01-host-create-launch-vm.sh`](01-host-create-launch-vm.sh) | Host (has VirtualBox) | Downloads Rocky Linux, verifies its checksum, creates the VM, installs it unattended |
 | [`02-guest-provision-rocky.sh`](02-guest-provision-rocky.sh) | Guest (inside the VM) | Installs everything below and applies hardening/UI tweaks |
 
+Run `01-host-create-launch-vm.sh` on a **macOS or Linux** host — it's plain bash. This
+repo doesn't cover Windows hosts.
+
 This always targets the current Rocky Linux major version — right now that's
 **Rocky Linux 9**. Don't pin to an old point release; the script tracks Rocky's
 "latest" convenience filename so it always grabs the current 9.x build. When Rocky
