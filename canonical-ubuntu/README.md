@@ -12,22 +12,36 @@ the guest OS:
 | [`01-host-create-launch-vm.sh`](01-host-create-launch-vm.sh) | Host (has VirtualBox) | Downloads Ubuntu Desktop, verifies its checksum, creates the VM, boots it |
 | [`02-guest-provision-ubuntu.sh`](02-guest-provision-ubuntu.sh) | Guest (inside the VM) | Installs everything below and applies hardening/UI tweaks |
 
-## Usage
+This always targets the current Ubuntu LTS — right now that's **26.04 (Resolute
+Raccoon)**. Don't point it at an interim release; when the next LTS ships, bump
+`UBUNTU_VERSION` at the top of `01-host-create-launch-vm.sh`.
 
-**1. Create and boot the VM (on the host):**
+## Usage — step by step
+
+**1. Create and install the VM, completely unattended (on the host):**
 
 ```bash
 ./01-host-create-launch-vm.sh
 ```
 
-Downloads Ubuntu 24.04 Desktop (override with `UBUNTU_VERSION`), creates a VM named
-`ubuntu-devops` (4 GB RAM / 2 CPUs / 40 GB disk — override with `VM_MEMORY_MB`,
-`VM_CPUS`, `VM_DISK_MB`, `VM_NAME`), attaches the ISO, and boots it.
+You'll be prompted once for a password for the account it creates (default username
+`devops` — override with `INSTALL_USER`). From there it runs with no further input:
 
-The Ubuntu installer itself is still interactive — VirtualBox has no unattended-install
-button. Walk through it, and on the "Updates and other software" screen choose
-**Minimal Installation** (not Normal) to keep the base OS lean. Reboot when it's done
-and log in.
+1. Downloads Ubuntu 26.04.1 Desktop (override with `UBUNTU_VERSION`) and verifies its
+   checksum.
+2. Creates a VM named `ubuntu-devops` (4 GB RAM / 2 CPUs / 40 GB disk — override with
+   `VM_MEMORY_MB`, `VM_CPUS`, `VM_DISK_MB`, `VM_NAME`).
+3. Runs `VBoxManage unattended install`, which feeds Ubuntu's installer the answers
+   (user/password, hostname, locale, timezone) automatically — this is VirtualBox's
+   built-in unattended-install feature, not a hand-rolled autoinstall file.
+4. Boots the VM in a window so you can watch it install (no clicks needed) and
+   installs VirtualBox Guest Additions along the way.
+
+This takes roughly 10-20 minutes. When it finishes, the VM reboots into the desktop —
+log in as the user you set.
+
+If the VM powers off instead of rebooting, start it again with
+`VBoxManage startvm ubuntu-devops`.
 
 **2. Provision the desktop (inside the VM, as your normal user — not root):**
 
@@ -36,7 +50,10 @@ chmod +x 02-guest-provision-ubuntu.sh
 ./02-guest-provision-ubuntu.sh
 ```
 
-Both scripts are idempotent — safe to re-run; already-installed tools are skipped.
+(Drag-and-drop and shared clipboard are enabled on the VM, so you can copy this script
+in directly from the host.)
+
+Both scripts are safe to run more than once — already-installed tools are just skipped.
 
 ## What gets installed
 
