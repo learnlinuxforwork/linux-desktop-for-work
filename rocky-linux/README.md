@@ -13,7 +13,7 @@ the guest OS:
 
 | Script | Runs on | Purpose |
 |---|---|---|
-| [`01-host-create-launch-vm.sh`](01-host-create-launch-vm.sh) | Host (has VirtualBox) | Downloads Rocky Linux, verifies its checksum, creates the VM, installs it unattended |
+| [`01-host-create-launch-vm.sh`](01-host-create-launch-vm.sh) | Host (has VirtualBox) | Downloads Rocky Linux to `~/iso`, creates the VM with Secure Boot enabled, installs it unattended |
 | [`02-guest-provision-rocky.sh`](02-guest-provision-rocky.sh) | Guest (inside the VM) | Installs everything below and applies hardening/UI tweaks |
 
 Run `01-host-create-launch-vm.sh` on a **macOS or Linux** host — it's plain bash. This
@@ -42,14 +42,16 @@ You'll be prompted once for a password for the account it creates (default usern
    it.
 2. Creates a VM named `rocky-devops` (4 GB RAM / 2 CPUs / 40 GB disk — override with
    `VM_MEMORY_MB`, `VM_CPUS`, `VM_DISK_MB`, `VM_NAME`).
-3. Runs `VBoxManage unattended install`, which generates a kickstart file with the
+3. Enables Secure Boot on the VM — EFI firmware, Microsoft + Oracle keys enrolled. See
+   "Secure Boot" below for what that means once you're inside the VM.
+4. Runs `VBoxManage unattended install`, which generates a kickstart file with the
    answers (user/password, hostname, locale, timezone) automatically — this is
    VirtualBox's built-in unattended-install feature, not a hand-written kickstart.
-4. As a safety net, a post-install command explicitly installs the GNOME
+5. As a safety net, a post-install command explicitly installs the GNOME
    **Workstation** package group and sets the graphical boot target — the
    auto-generated kickstart's default package selection isn't guaranteed to include a
    desktop, so this guarantees you land on one regardless.
-5. Boots the VM in a window so you can watch it install (no clicks needed) and
+6. Boots the VM in a window so you can watch it install (no clicks needed) and
    installs VirtualBox Guest Additions along the way.
 
 Because of the extra package group install, this takes roughly 20-30+ minutes. When

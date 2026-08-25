@@ -36,9 +36,10 @@ Windows isn't covered here.
    ./01-host-create-launch-vm.sh
    ```
    You'll be asked once for a password for the account it creates. After that it
-   downloads Ubuntu into `~/iso` (see "Standard ISO location" below), creates the VM,
-   and installs the OS with no further input — watch it happen in the VM window. Takes
-   roughly 10-20 minutes.
+   downloads Ubuntu into `~/iso` (see "Standard ISO location" below), creates the VM
+   with Secure Boot enabled (see "Secure Boot" in the section README), and installs
+   the OS with no further input — watch it happen in the VM window. Takes roughly
+   10-20 minutes.
 4. **Log in** to the desktop once it reboots, using the username/password from step 3
    (default username `devops`).
 5. **Copy the second script into the VM** — drag-and-drop from the host, or copy/paste
@@ -70,9 +71,10 @@ Full details, what gets installed, and troubleshooting: [`canonical-ubuntu/READM
    ```
    You'll be asked once for a password for the account it creates. After that it
    downloads Rocky Linux into `~/iso` (see "Standard ISO location" below), creates the
-   VM, and installs the OS with no further input — watch it happen in the VM window.
-   Takes roughly 20-30+ minutes (a bit longer than Ubuntu, since it also installs the
-   GNOME desktop group as part of the install).
+   VM with Secure Boot enabled (see "Secure Boot" in the section README), and installs
+   the OS with no further input — watch it happen in the VM window. Takes roughly
+   20-30+ minutes (a bit longer than Ubuntu, since it also installs the GNOME desktop
+   group as part of the install).
 4. **Log in** to the desktop once it reboots, using the username/password from step 3
    (default username `devops`). If you land on a text login instead of a desktop, see
    the fallback commands in [`rocky-linux/README.md`](rocky-linux/README.md).

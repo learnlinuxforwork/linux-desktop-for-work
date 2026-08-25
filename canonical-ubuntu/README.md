@@ -9,7 +9,7 @@ the guest OS:
 
 | Script | Runs on | Purpose |
 |---|---|---|
-| [`01-host-create-launch-vm.sh`](01-host-create-launch-vm.sh) | Host (has VirtualBox) | Downloads Ubuntu Desktop, verifies its checksum, creates the VM, boots it |
+| [`01-host-create-launch-vm.sh`](01-host-create-launch-vm.sh) | Host (has VirtualBox) | Downloads Ubuntu Desktop to `~/iso`, creates the VM with Secure Boot enabled, installs it unattended |
 | [`02-guest-provision-ubuntu.sh`](02-guest-provision-ubuntu.sh) | Guest (inside the VM) | Installs everything below and applies hardening/UI tweaks |
 
 Run `01-host-create-launch-vm.sh` on a **macOS or Linux** host — it's plain bash. This
@@ -35,10 +35,12 @@ You'll be prompted once for a password for the account it creates (default usern
    `ubuntu-26.04.1-desktop-amd64.iso` in `~/iso` yourself, skips straight to using it.
 2. Creates a VM named `ubuntu-devops` (4 GB RAM / 2 CPUs / 40 GB disk — override with
    `VM_MEMORY_MB`, `VM_CPUS`, `VM_DISK_MB`, `VM_NAME`).
-3. Runs `VBoxManage unattended install`, which feeds Ubuntu's installer the answers
+3. Enables Secure Boot on the VM — EFI firmware, Microsoft + Oracle keys enrolled. See
+   "Secure Boot" below for what that means once you're inside the VM.
+4. Runs `VBoxManage unattended install`, which feeds Ubuntu's installer the answers
    (user/password, hostname, locale, timezone) automatically — this is VirtualBox's
    built-in unattended-install feature, not a hand-rolled autoinstall file.
-4. Boots the VM in a window so you can watch it install (no clicks needed) and
+5. Boots the VM in a window so you can watch it install (no clicks needed) and
    installs VirtualBox Guest Additions along the way.
 
 This takes roughly 10-20 minutes. When it finishes, the VM reboots into the desktop —
