@@ -30,8 +30,9 @@ Raccoon)**. Don't point it at an interim release; when the next LTS ships, bump
 You'll be prompted once for a password for the account it creates (default username
 `devops` — override with `INSTALL_USER`). From there it runs with no further input:
 
-1. Downloads Ubuntu 26.04.1 Desktop (override with `UBUNTU_VERSION`) and verifies its
-   checksum.
+1. Downloads Ubuntu 26.04.1 Desktop into `~/iso` (override with `UBUNTU_VERSION` and
+   `ISO_DIR`) and verifies its checksum — or, if you've already placed
+   `ubuntu-26.04.1-desktop-amd64.iso` in `~/iso` yourself, skips straight to using it.
 2. Creates a VM named `ubuntu-devops` (4 GB RAM / 2 CPUs / 40 GB disk — override with
    `VM_MEMORY_MB`, `VM_CPUS`, `VM_DISK_MB`, `VM_NAME`).
 3. Runs `VBoxManage unattended install`, which feeds Ubuntu's installer the answers

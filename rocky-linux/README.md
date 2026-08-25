@@ -36,8 +36,10 @@ ships a new major version, bump `ROCKY_MAJOR` at the top of
 You'll be prompted once for a password for the account it creates (default username
 `devops` — override with `INSTALL_USER`). From there it runs with no further input:
 
-1. Downloads the current Rocky Linux 9 DVD ISO (override with `ROCKY_MAJOR`) and
-   verifies its checksum.
+1. Downloads the current Rocky Linux 9 DVD ISO into `~/iso` (override with
+   `ROCKY_MAJOR` and `ISO_DIR`) and verifies its checksum — or, if you've already
+   placed `Rocky-9-latest-x86_64-dvd.iso` in `~/iso` yourself, skips straight to using
+   it.
 2. Creates a VM named `rocky-devops` (4 GB RAM / 2 CPUs / 40 GB disk — override with
    `VM_MEMORY_MB`, `VM_CPUS`, `VM_DISK_MB`, `VM_NAME`).
 3. Runs `VBoxManage unattended install`, which generates a kickstart file with the

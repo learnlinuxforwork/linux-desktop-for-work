@@ -36,8 +36,9 @@ Windows isn't covered here.
    ./01-host-create-launch-vm.sh
    ```
    You'll be asked once for a password for the account it creates. After that it
-   downloads Ubuntu, creates the VM, and installs the OS with no further input —
-   watch it happen in the VM window. Takes roughly 10-20 minutes.
+   downloads Ubuntu into `~/iso` (see "Standard ISO location" below), creates the VM,
+   and installs the OS with no further input — watch it happen in the VM window. Takes
+   roughly 10-20 minutes.
 4. **Log in** to the desktop once it reboots, using the username/password from step 3
    (default username `devops`).
 5. **Copy the second script into the VM** — drag-and-drop from the host, or copy/paste
@@ -68,9 +69,10 @@ Full details, what gets installed, and troubleshooting: [`canonical-ubuntu/READM
    ./01-host-create-launch-vm.sh
    ```
    You'll be asked once for a password for the account it creates. After that it
-   downloads Rocky Linux, creates the VM, and installs the OS with no further input —
-   watch it happen in the VM window. Takes roughly 20-30+ minutes (a bit longer than
-   Ubuntu, since it also installs the GNOME desktop group as part of the install).
+   downloads Rocky Linux into `~/iso` (see "Standard ISO location" below), creates the
+   VM, and installs the OS with no further input — watch it happen in the VM window.
+   Takes roughly 20-30+ minutes (a bit longer than Ubuntu, since it also installs the
+   GNOME desktop group as part of the install).
 4. **Log in** to the desktop once it reboots, using the username/password from step 3
    (default username `devops`). If you land on a text login instead of a desktop, see
    the fallback commands in [`rocky-linux/README.md`](rocky-linux/README.md).
@@ -86,6 +88,39 @@ Full details, what gets installed, and troubleshooting: [`canonical-ubuntu/READM
 7. **Reboot the VM** when it's done to pick up the dock change and any updates.
 
 Full details, what gets installed, and troubleshooting: [`rocky-linux/README.md`](rocky-linux/README.md)
+
+## Standard ISO location
+
+Every host script downloads its OS image into the same place: **`~/iso`** — that is,
+an `iso` folder directly under whichever user is running the script's actual home
+directory. That path is looked up from the system's own user database (`getent` on
+Linux, `dscl` on macOS) rather than just trusted from the `$HOME` environment
+variable, so it's correct even if `$HOME` is unset or has been overridden — the same
+pattern as:
+
+```bash
+username="john"
+user_home=$(getent passwd "$username" | cut -d: -f6)
+if [ -n "$user_home" ]; then
+    iso_dir="$user_home/iso"
+    mkdir -p "$iso_dir"
+else
+    echo "User $username does not exist."
+fi
+```
+
+**Pre-staging an ISO:** if you already have the installer image (e.g. downloaded once
+and want to reuse it, or you're setting up an offline/air-gapped machine), just drop
+it in `~/iso` yourself under the exact filename the script expects, and it skips the
+download entirely:
+
+| Distro | Expected filename in `~/iso` |
+|---|---|
+| Ubuntu | `ubuntu-<UBUNTU_VERSION>-desktop-amd64.iso` (e.g. `ubuntu-26.04.1-desktop-amd64.iso`) |
+| Rocky Linux | `Rocky-<ROCKY_MAJOR>-latest-x86_64-dvd.iso` (e.g. `Rocky-9-latest-x86_64-dvd.iso`) |
+
+Want it somewhere else entirely? Every host script honors an `ISO_DIR` override:
+`ISO_DIR=/mnt/isos ./01-host-create-launch-vm.sh`.
 
 ## Conventions
 
@@ -103,3 +138,4 @@ Full details, what gets installed, and troubleshooting: [`rocky-linux/README.md`
   Secure Boot / kernel-extension issues on the host itself (Linux and macOS). See
   "Secure Boot" in each section's README for what's enabled, what it means for Guest
   Additions, and how to disable it if you don't want it.
+- OS images always download to `~/iso` — see "Standard ISO location" above.
