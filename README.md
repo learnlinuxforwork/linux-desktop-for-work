@@ -21,6 +21,10 @@ Windows isn't covered here.
 - [`rocky-linux/`](rocky-linux/README.md) — Rocky Linux Workstation in VirtualBox, with
   the same tooling and hardening as the Ubuntu section, adapted for a `dnf`-based distro.
 
+Also see: [**Build Your Own Work-Ready Linux Desktop**](docs/course-post.md) — a
+lesson-style walkthrough of what this repo teaches and why, for anyone using it as
+course content rather than jumping straight to the scripts.
+
 ## Quick start: Ubuntu
 
 1. **Install VirtualBox** on your macOS or Linux host machine if you don't already
