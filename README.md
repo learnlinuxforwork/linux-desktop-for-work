@@ -145,3 +145,10 @@ Want it somewhere else entirely? Every host script honors an `ISO_DIR` override:
   "Secure Boot" in each section's README for what's enabled, what it means for Guest
   Additions, and how to disable it if you don't want it.
 - OS images always download to `~/iso` — see "Standard ISO location" above.
+
+## 💜 Support Learn Linux for Work
+
+**[Support Learn Linux for Work](https://pay.sheastech.io/b/aEU039dindBv6UU14l)**. An open source project of Shea's Tech, LLC.
+
+- 🔗 [Learn Linux for Work Linktree](https://linktr.ee/learnlinuxforwork) · [Shea's Tech Linktree](https://linktr.ee/sheastech)
+- 📜 [Terms and conditions](https://learnlinuxforwork.com/terms)
